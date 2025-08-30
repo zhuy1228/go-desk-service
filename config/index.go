@@ -7,10 +7,10 @@ import (
 )
 
 type AppConfig struct {
-	Port       int              `yaml:"port"`
-	Database   DatabaseConfig   `yaml:"database"`
-	BitBrowser BitBrowserConfig `yaml:"bitBrowser"`
-	AdsPower   AdsPowerConfig   `yaml:"adsPower"`
+	Port         int            `yaml:"port"`
+	Database     DatabaseConfig `yaml:"database"`
+	WorkerID     int64          `yaml:"workerID"`
+	DatacenterID int64          `yaml:"datacenterID"`
 }
 
 type DatabaseConfig struct {
@@ -19,16 +19,6 @@ type DatabaseConfig struct {
 	Host     string `yaml:"host"`
 	Port     int    `yaml:"port"`
 	Database string `yaml:"database"`
-}
-
-type BitBrowserConfig struct {
-	ApiUrl   string `yaml:"apiUrl"`
-	ApiToken string `yaml:"apiToken"`
-}
-
-type AdsPowerConfig struct {
-	ApiUrl   string `yaml:"apiUrl"`
-	ApiToken string `yaml:"apiToken"`
 }
 
 func LoadConfig() (*AppConfig, error) {
