@@ -25,6 +25,13 @@ func main() {
 	go handleShutdownSignals()
 	libs.Connect()
 	grpcClient.UserClientInit()
+	// 创建 STUN 服务器实例
+	stunServer := libs.NewSTUNServer(appConfig.StunPort)
+	// 启动 STUN 服务器
+	if err1 := stunServer.Start(); err1 != nil {
+		log.Fatalf("Failed to start STUN server: %v", err1)
+	}
+	defer stunServer.Close()
 	app := gin.Default()
 	router.Init(app)
 	app.Run(":" + strconv.Itoa(appConfig.Port))
