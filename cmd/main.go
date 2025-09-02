@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"go-desk-service/config"
+	grpcClient "go-desk-service/grpc-client"
 	"go-desk-service/libs"
 	"go-desk-service/router"
 	"log"
@@ -23,6 +24,7 @@ func main() {
 
 	go handleShutdownSignals()
 	libs.Connect()
+	grpcClient.UserClientInit()
 	app := gin.Default()
 	router.Init(app)
 	app.Run(":" + strconv.Itoa(appConfig.Port))

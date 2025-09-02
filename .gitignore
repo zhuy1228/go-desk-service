@@ -6,6 +6,7 @@ yarn-debug.log*
 yarn-error.log*
 /public/uploads/
 config.yaml
+*.pb.go
 
 # Editor directories and files
 .idea

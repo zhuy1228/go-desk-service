@@ -11,6 +11,7 @@ type AppConfig struct {
 	Database     DatabaseConfig `yaml:"database"`
 	WorkerID     int64          `yaml:"workerID"`
 	DatacenterID int64          `yaml:"datacenterID"`
+	GrpcUrl      string         `yaml:"grpcUrl"`
 }
 
 type DatabaseConfig struct {
