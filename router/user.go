@@ -13,4 +13,5 @@ var ApiUser api.User
 func (*User) Init(app *gin.Engine) {
 	group := app.Group("/user")
 	group.POST("/login", ApiUser.Login)
+	group.POST("/register", ApiUser.Register)
 }
