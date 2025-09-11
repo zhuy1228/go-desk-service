@@ -19,4 +19,5 @@ var ErrorCode = map[string]*ErrorInfo{
 	"AccountRequiresRobotVerification": {Code: 0, Data: "", Msg: "账号需要机器人验证"},
 	"BrowserOpenFail":                  {Code: 0, Data: "", Msg: "浏览器开启失败"},
 	"AccountFailed":                    {Code: 0, Data: "", Msg: "账号不存在"},
+	"TokenExpired":                     {Code: 0, Data: "", Msg: "Token已过期"},
 }
