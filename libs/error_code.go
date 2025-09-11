@@ -20,4 +20,7 @@ var ErrorCode = map[string]*ErrorInfo{
 	"BrowserOpenFail":                  {Code: 0, Data: "", Msg: "浏览器开启失败"},
 	"AccountFailed":                    {Code: 0, Data: "", Msg: "账号不存在"},
 	"TokenExpired":                     {Code: 0, Data: "", Msg: "Token已过期"},
+	"LoginError":                       {Code: 0, Data: "", Msg: "登录失败"},
+	"RegistrationFailed":               {Code: 0, Data: "", Msg: "注册失败"},
+	"WebsocktFailed":                   {Code: 0, Data: "", Msg: "WebSocket 连接失败"},
 }
