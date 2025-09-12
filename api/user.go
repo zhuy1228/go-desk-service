@@ -3,9 +3,13 @@ package api
 import (
 	"context"
 	"fmt"
+	"go-desk-service/config"
 	grpcClient "go-desk-service/grpc-client"
 	"go-desk-service/libs"
+	"go-desk-service/models"
 	userpb "go-desk-service/proto/gen"
+	"go-desk-service/services"
+	"go-desk-service/utils"
 	"log"
 	"net/http"
 	"time"
@@ -35,7 +39,7 @@ func (*User) Login(ctx *gin.Context) {
 	if err := ctx.ShouldBindJSON(&paramsJson); err != nil {
 		res = libs.ErrorCode["ParamsError"]
 		fmt.Println(err)
-		ctx.JSON(http.StatusBadRequest, gin.H{
+		ctx.JSON(http.StatusOK, gin.H{
 			"code": res.Code,
 			"msg":  res.Msg,
 			"data": res.Data,
@@ -52,15 +56,20 @@ func (*User) Login(ctx *gin.Context) {
 	})
 	if err != nil {
 		res = libs.ErrorCode["LoginError"]
-		log.Fatalf("登录失败: %v", err)
-		ctx.JSON(http.StatusBadRequest, gin.H{
+		// log.Fatalf("登录失败: %v", err)
+		ctx.JSON(http.StatusOK, gin.H{
 			"code": res.Code,
 			"msg":  res.Msg,
 			"data": res.Data,
 		})
 		return
 	}
-	ctx.JSON(http.StatusBadRequest, gin.H{
+	ProfileService := services.InitProfileService()
+	log.Println(loginResp.UserId)
+	ProfileService.UpdateAccount(loginResp.UserId, &models.Profile{
+		LoginStatus: 1,
+	})
+	ctx.JSON(http.StatusOK, gin.H{
 		"code": 200,
 		"msg":  "登录成功",
 		"data": loginResp,
@@ -73,7 +82,7 @@ func (*User) Register(ctx *gin.Context) {
 	if err := ctx.ShouldBindJSON(&paramsJson); err != nil {
 		res = libs.ErrorCode["ParamsError"]
 		fmt.Println(err)
-		ctx.JSON(http.StatusBadRequest, gin.H{
+		ctx.JSON(http.StatusOK, gin.H{
 			"code": res.Code,
 			"msg":  res.Msg,
 			"data": res.Data,
@@ -92,15 +101,30 @@ func (*User) Register(ctx *gin.Context) {
 	})
 	if err != nil {
 		res = libs.ErrorCode["RegistrationFailed"]
-		log.Fatalf("注册失败: %v", err)
-		ctx.JSON(http.StatusBadRequest, gin.H{
+
+		ctx.JSON(http.StatusOK, gin.H{
 			"code": res.Code,
 			"msg":  res.Msg,
 			"data": res.Data,
 		})
+		// log.Fatalf("注册失败: %v", err)
 		return
 	}
-	ctx.JSON(http.StatusBadRequest, gin.H{
+	// 信息映射到当前表
+	appConfig, _ := config.LoadConfig()
+	Snowflake, _ := utils.NewSnowflake(appConfig.WorkerID, appConfig.DatacenterID)
+	ProfileId := Snowflake.NextID()
+	ProfileService := services.InitProfileService()
+	ProfileService.Create(&models.Profile{
+		ID:          ProfileId,
+		UserId:      registerResp.UserId,
+		Nickname:    paramsJson.Nickname,
+		Email:       paramsJson.Email,
+		Phone:       paramsJson.Phone,
+		Status:      1,
+		LoginStatus: 0,
+	})
+	ctx.JSON(http.StatusOK, gin.H{
 		"code": 200,
 		"msg":  "注册成功",
 		"data": registerResp,
