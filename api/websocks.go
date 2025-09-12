@@ -33,14 +33,16 @@ var upgrader = websocket.Upgrader{
 func (*Websocks) Init(ctx *gin.Context) {
 	WebsocktFailed := libs.ErrorCode["WebsocktFailed"]
 	// 判断当前连接是否合法
-	tokenStr := ctx.Request.Header.Get("Sec-WebSocket-Protocol")
-	if tokenStr == "" {
+	key := http.CanonicalHeaderKey("sec-websocket-protocol")
+	protos := ctx.Request.Header[key]
+	if len(protos) > 0 {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"code": WebsocktFailed.Code, "data": WebsocktFailed.Data, "msg": WebsocktFailed.Msg})
 		return
 	}
 	client := grpcClient.GetUserClient()
 	ctx1, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
+	tokenStr := protos[0]
 	TokenStatus, err1 := client.ValidateToken(ctx1, &userpb.ValidateTokenRequest{
 		AccessToken: tokenStr,
 	})
@@ -65,9 +67,9 @@ func (*Websocks) Init(ctx *gin.Context) {
 	defer conn.Close()
 
 	// 将保存连接状态
-	ClientsMu.Lock()
-	Clients[TokenStatus.UserId] = conn
-	ClientsMu.Unlock()
+	// ClientsMu.Lock()
+	// Clients[TokenStatus.UserId] = conn
+	// ClientsMu.Unlock()
 	log.Printf("客户端已连接: %s", conn.RemoteAddr())
 	for {
 		mt, message, err := conn.ReadMessage()
