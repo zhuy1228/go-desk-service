@@ -26,7 +26,7 @@ func UserClientInit() {
 	if err != nil {
 		log.Fatalf("连接失败: %v", err)
 	}
-	defer conn.Close()
+	// defer conn.Close()
 	client := userpb.NewUserServiceClient(conn)
 	UserClient = client
 }
