@@ -23,6 +23,7 @@ type User struct {
 type LoginRequestParams struct {
 	Username string `form:"username" json:"username" uri:"username" xml:"username" binding:"required"`
 	Password string `form:"password" json:"password" uri:"password" xml:"password" binding:"required"`
+	DeviceId string `form:"device_id" json:"device_id" uri:"device_id" xml:"device_id" binding:"required"`
 }
 
 type RegisterRequestParams struct {
@@ -69,6 +70,8 @@ func (*User) Login(ctx *gin.Context) {
 	ProfileService.UpdateAccount(loginResp.UserId, &models.Profile{
 		LoginStatus: 1,
 	})
+	// 登录成功之后查看设备是否是当前设备
+	DeviceService := services.InitDeviceService()
 	ctx.JSON(http.StatusOK, gin.H{
 		"code": 200,
 		"msg":  "登录成功",
