@@ -23,4 +23,5 @@ var ErrorCode = map[string]*ErrorInfo{
 	"LoginError":                       {Code: 0, Data: "", Msg: "登录失败"},
 	"RegistrationFailed":               {Code: 0, Data: "", Msg: "注册失败"},
 	"WebsocktFailed":                   {Code: 0, Data: "", Msg: "WebSocket 连接失败"},
+	"SevaSuccessful":                   {Code: 200, Data: "", Msg: "保存成功"},
 }

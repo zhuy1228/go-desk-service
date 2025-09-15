@@ -72,6 +72,7 @@ func (*User) Login(ctx *gin.Context) {
 	})
 	// 登录成功之后查看设备是否是当前设备
 	DeviceService := services.InitDeviceService()
+	DeviceService.SetUserLoginStatus(loginResp.UserId, loginResp.AccessToken, paramsJson.DeviceId)
 	ctx.JSON(http.StatusOK, gin.H{
 		"code": 200,
 		"msg":  "登录成功",

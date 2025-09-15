@@ -21,5 +21,5 @@ type Device struct {
 
 // 实现 TableName 方法指定表名
 func (Device) TableName() string {
-	return "gd_Device"
+	return "gd_device"
 }

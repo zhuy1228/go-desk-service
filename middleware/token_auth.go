@@ -40,6 +40,7 @@ func TokenAuth() gin.HandlerFunc {
 			return
 		}
 		c.Set("userID", TokenStatus.UserId)
+		c.Set("token", authHeader)
 		c.Next()
 	}
 }
