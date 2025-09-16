@@ -35,7 +35,7 @@ func (*Websocks) Init(ctx *gin.Context) {
 	// 判断当前连接是否合法
 	key := http.CanonicalHeaderKey("sec-websocket-protocol")
 	protos := ctx.Request.Header[key]
-	if len(protos) > 0 {
+	if len(protos) <= 0 {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"code": WebsocktFailed.Code, "data": WebsocktFailed.Data, "msg": WebsocktFailed.Msg})
 		return
 	}
@@ -60,7 +60,6 @@ func (*Websocks) Init(ctx *gin.Context) {
 
 	if err != nil {
 		log.Printf("WebSocket 升级失败: %v", err)
-
 		ctx.JSON(http.StatusInternalServerError, gin.H{"code": WebsocktFailed.Code, "data": WebsocktFailed.Data, "msg": WebsocktFailed.Msg})
 		return
 	}
