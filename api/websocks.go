@@ -5,6 +5,7 @@ import (
 	grpcClient "go-desk-service/grpc-client"
 	"go-desk-service/libs"
 	userpb "go-desk-service/proto/gen"
+	"go-desk-service/services"
 	"log"
 	"net/http"
 	"sync"
@@ -64,7 +65,8 @@ func (*Websocks) Init(ctx *gin.Context) {
 		return
 	}
 	defer conn.Close()
-
+	deviceService := services.InitDeviceService()
+	deviceService.Login(tokenStr)
 	// 将保存连接状态
 	// ClientsMu.Lock()
 	// Clients[TokenStatus.UserId] = conn
@@ -74,6 +76,9 @@ func (*Websocks) Init(ctx *gin.Context) {
 		mt, message, err := conn.ReadMessage()
 		if err != nil {
 			log.Printf("读取错误: %v (客户端: %s)", err, conn.RemoteAddr())
+			log.Println("客户端断开", tokenStr)
+			deviceService := services.InitDeviceService()
+			deviceService.Logout(tokenStr)
 			break
 		}
 		log.Printf("收到来自 %s 的消息: %s", conn.RemoteAddr(), string(message))

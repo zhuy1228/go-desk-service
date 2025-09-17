@@ -60,7 +60,7 @@ func (d *DeviceService) GetInfoByToken(token string) (*models.Device, error) {
 
 func (d *DeviceService) GetUserLoginStatus(userId int64) (int, error) {
 	var count int64
-	err := d.db.Model(&models.Device{}).Where("user_id = ? AND login_status = ?", userId, 1).Count(&count).Error
+	err := d.db.Model(&models.Device{}).Where("user_id = ?", userId).Count(&count).Error
 	if err != nil {
 		return 0, err
 	}
@@ -91,6 +91,27 @@ func (d *DeviceService) SetUserLoginStatus(userId int64, token, deviceUid string
 	}
 	d.db.Model(&models.Device{}).Where("id = ?", device.ID).Updates(&models.Device{
 		Token:       token,
+		LoginStatus: 1,
+		UpdatedAt:   time.Now(),
+	})
+}
+
+func (d *DeviceService) Logout(token string) {
+	d.db.Model(&models.Device{}).Where("token = ?", token).Updates(map[string]interface{}{
+		"login_status": 0,
+		"updated_at":   time.Now(),
+	})
+}
+
+func (d *DeviceService) GetAll(userId int64) []models.Device {
+	var device []models.Device
+	d.db.Select("id", "hostname", "platform", "platform_version", "mac", "cpu", "mem", "disk", "device_uid", "login_status", "ip").Model(&models.Device{}).Where("user_id = ?", userId).Find(&device)
+
+	return device
+}
+
+func (d *DeviceService) Login(token string) {
+	d.db.Model(&models.Device{}).Where("token = ?", token).Updates(&models.Device{
 		LoginStatus: 1,
 		UpdatedAt:   time.Now(),
 	})

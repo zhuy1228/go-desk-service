@@ -15,6 +15,7 @@ type Device struct {
 	Mem             string    `gorm:"mem"`
 	Disk            string    `gorm:"disk"`
 	LoginStatus     int       `gorm:"login_status"` // 1: 已登录, 0: 未登录
+	Ip              string    `gorm:"ip"`
 	CreatedAt       time.Time `gorm:"created_at;type:timestamptz"`
 	UpdatedAt       time.Time `gorm:"updated_at;type:timestamptz"`
 }

@@ -37,6 +37,7 @@ func (*DeviceApi) SevaDeviceInfo(ctx *gin.Context) {
 	}
 	// 获取当前的用户ID跟token信息
 	token, _ := ctx.Get("token")
+	IP := ctx.ClientIP()
 	// 保存当前的设备
 	DeviceService := services.InitDeviceService()
 	DeviceService.UpdateByToken(token.(string), &models.Device{
@@ -47,11 +48,23 @@ func (*DeviceApi) SevaDeviceInfo(ctx *gin.Context) {
 		Cpu:             paramsJson.CPU,
 		Mem:             paramsJson.Mem,
 		Disk:            paramsJson.Disk,
+		Ip:              IP,
 	})
 	res = libs.ErrorCode["SevaSuccessful"]
 	ctx.JSON(http.StatusOK, gin.H{
 		"code": res.Code,
 		"msg":  res.Msg,
 		"data": res.Data,
+	})
+}
+
+func (*DeviceApi) GetAll(ctx *gin.Context) {
+	userId, _ := ctx.Get("userID")
+	DeviceService := services.InitDeviceService()
+	devices := DeviceService.GetAll(userId.(int64))
+	ctx.JSON(http.StatusOK, gin.H{
+		"code": 200,
+		"msg":  "",
+		"data": devices,
 	})
 }
