@@ -2,8 +2,10 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	grpcClient "go-desk-service/grpc-client"
 	"go-desk-service/libs"
+	"go-desk-service/models"
 	userpb "go-desk-service/proto/gen"
 	"go-desk-service/services"
 	"log"
@@ -19,9 +21,13 @@ type Websocks struct {
 }
 
 type Message struct {
+	Type      string `form:"type" json:"type" uri:"type" xml:"type"`
+	Data      any    `form:"data" json:"data" uri:"data" xml:"data"`
+	Recipient int64  `form:"recipient" json:"recipient" uri:"recipient" xml:"recipient"`
+	Sender    int64  `form:"sender" json:"sender" uri:"sender" xml:"sender"`
 }
 
-var Clients = make(map[int64]map[string]*websocket.Conn) // 已连接的客户端
+var Clients = make(map[int64]map[int64]*websocket.Conn) // 已连接的客户端
 
 var ClientsMu sync.Mutex // 保护 clients 映射的互斥锁
 
@@ -31,7 +37,7 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-func (*Websocks) Init(ctx *gin.Context) {
+func (w *Websocks) Init(ctx *gin.Context) {
 	WebsocktFailed := libs.ErrorCode["WebsocktFailed"]
 	// 判断当前连接是否合法
 	key := http.CanonicalHeaderKey("sec-websocket-protocol")
@@ -66,26 +72,53 @@ func (*Websocks) Init(ctx *gin.Context) {
 	}
 	defer conn.Close()
 	deviceService := services.InitDeviceService()
-	deviceService.Login(tokenStr)
+	deviceLoginInfo := deviceService.Login(tokenStr)
 	// 将保存连接状态
-	// ClientsMu.Lock()
-	// Clients[TokenStatus.UserId] = conn
-	// ClientsMu.Unlock()
+	ClientsMu.Lock()
+	Clients[TokenStatus.UserId] = map[int64]*websocket.Conn{deviceLoginInfo.ID: conn}
+	ClientsMu.Unlock()
 	log.Printf("客户端已连接: %s", conn.RemoteAddr())
+	w.MessageHandle(conn, deviceLoginInfo)
+}
+
+func (*Websocks) MessageHandle(conn *websocket.Conn, deviceLoginInfo models.Device) {
 	for {
-		mt, message, err := conn.ReadMessage()
+		_, message, err := conn.ReadMessage()
 		if err != nil {
 			log.Printf("读取错误: %v (客户端: %s)", err, conn.RemoteAddr())
-			log.Println("客户端断开", tokenStr)
+			log.Println("客户端断开", deviceLoginInfo.Token)
 			deviceService := services.InitDeviceService()
-			deviceService.Logout(tokenStr)
+			deviceService.Logout(deviceLoginInfo.Token)
 			break
 		}
+
 		log.Printf("收到来自 %s 的消息: %s", conn.RemoteAddr(), string(message))
-		err = conn.WriteMessage(mt, message)
-		if err != nil {
-			log.Println("write:", err)
-			break
+		var data Message
+		// 结构体解析
+		if err := json.Unmarshal(message, &data); err == nil && data.Type != "" {
+			// 说明是结构体(JSON)
+			log.Printf("收到结构体: %+v\n", data)
+			switch data.Type {
+			case "message":
+				if data.Recipient != 0 {
+					// 将数据推送给对应设备
+					userConn := Clients[deviceLoginInfo.UserId][deviceLoginInfo.ID]
+					userConn.WriteJSON(&Message{
+						Type:      "message",
+						Data:      data.Data,
+						Sender:    deviceLoginInfo.UserId,
+						Recipient: data.Recipient,
+					})
+				}
+				break
+			}
+		} else {
+			log.Printf("收到普通消息: %s\n", string(message))
 		}
+		// err = conn.WriteMessage(mt, message)
+		// if err != nil {
+		// 	log.Println("write:", err)
+		// 	break
+		// }
 	}
 }

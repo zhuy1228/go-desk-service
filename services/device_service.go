@@ -110,9 +110,12 @@ func (d *DeviceService) GetAll(userId int64) []models.Device {
 	return device
 }
 
-func (d *DeviceService) Login(token string) {
+func (d *DeviceService) Login(token string) models.Device {
 	d.db.Model(&models.Device{}).Where("token = ?", token).Updates(&models.Device{
 		LoginStatus: 1,
 		UpdatedAt:   time.Now(),
 	})
+	var device models.Device
+	d.db.Model(&models.Device{}).Where("token = ?", token).First(&device)
+	return device
 }
