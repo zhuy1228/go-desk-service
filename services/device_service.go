@@ -58,6 +58,12 @@ func (d *DeviceService) GetInfoByToken(token string) (*models.Device, error) {
 	return &device, nil
 }
 
+func (d *DeviceService) GetInfo(id int64) *models.Device {
+	var device models.Device
+	d.db.Model(&models.Device{}).Where("id = ?", id).First(&device)
+	return &device
+}
+
 func (d *DeviceService) GetUserLoginStatus(userId int64) (int, error) {
 	var count int64
 	err := d.db.Model(&models.Device{}).Where("user_id = ?", userId).Count(&count).Error

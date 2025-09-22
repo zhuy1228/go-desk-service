@@ -20,6 +20,8 @@ import (
 type Websocks struct {
 }
 
+var DeviceList map[int64]models.Device
+
 type Message struct {
 	Type      string `form:"type" json:"type" uri:"type" xml:"type"`
 	Data      any    `form:"data" json:"data" uri:"data" xml:"data"`
@@ -73,6 +75,7 @@ func (w *Websocks) Init(ctx *gin.Context) {
 	defer conn.Close()
 	deviceService := services.InitDeviceService()
 	deviceLoginInfo := deviceService.Login(tokenStr)
+	DeviceList[deviceLoginInfo.ID] = deviceLoginInfo
 	// 将保存连接状态
 	ClientsMu.Lock()
 	Clients[TokenStatus.UserId] = map[int64]*websocket.Conn{deviceLoginInfo.ID: conn}
@@ -84,6 +87,7 @@ func (w *Websocks) Init(ctx *gin.Context) {
 func (*Websocks) MessageHandle(conn *websocket.Conn, deviceLoginInfo models.Device) {
 	for {
 		_, message, err := conn.ReadMessage()
+
 		if err != nil {
 			log.Printf("读取错误: %v (客户端: %s)", err, conn.RemoteAddr())
 			log.Println("客户端断开", deviceLoginInfo.Token)
@@ -98,19 +102,22 @@ func (*Websocks) MessageHandle(conn *websocket.Conn, deviceLoginInfo models.Devi
 		if err := json.Unmarshal(message, &data); err == nil && data.Type != "" {
 			// 说明是结构体(JSON)
 			log.Printf("收到结构体: %+v\n", data)
+			var RecipientDevice models.Device
+			if data.Recipient != 0 {
+				RecipientDevice = DeviceList[data.Recipient]
+			}
 			switch data.Type {
 			case "message":
 				if data.Recipient != 0 {
 					// 将数据推送给对应设备
-					userConn := Clients[deviceLoginInfo.UserId][deviceLoginInfo.ID]
+					userConn := Clients[RecipientDevice.UserId][RecipientDevice.ID]
 					userConn.WriteJSON(&Message{
 						Type:      "message",
 						Data:      data.Data,
-						Sender:    deviceLoginInfo.UserId,
+						Sender:    deviceLoginInfo.ID,
 						Recipient: data.Recipient,
 					})
 				}
-				break
 			}
 		} else {
 			log.Printf("收到普通消息: %s\n", string(message))
