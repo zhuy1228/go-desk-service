@@ -115,12 +115,17 @@ func (*Websocks) MessageHandle(conn *websocket.Conn, deviceLoginInfo models.Devi
 				if data.Recipient != 0 {
 					// 将数据推送给对应设备
 					userConn := Clients[RecipientDevice.UserId][RecipientDevice.ID]
-					userConn.WriteJSON(&Message{
-						Type:      "message",
-						Data:      data.Data,
-						Sender:    deviceLoginInfo.ID,
-						Recipient: data.Recipient,
-					})
+					if userConn != nil {
+						userConn.WriteJSON(&Message{
+							Type:      "message",
+							Data:      data.Data,
+							Sender:    deviceLoginInfo.ID,
+							Recipient: data.Recipient,
+						})
+					} else {
+						log.Println("未获取到设备ID：", RecipientDevice.ID)
+					}
+
 				}
 			}
 		} else {
