@@ -79,7 +79,10 @@ func (w *Websocks) Init(ctx *gin.Context) {
 
 	// 将保存连接状态
 	ClientsMu.Lock()
-	Clients[TokenStatus.UserId] = map[int64]*websocket.Conn{deviceLoginInfo.ID: conn}
+	if _, ok := Clients[TokenStatus.UserId]; !ok {
+		Clients[TokenStatus.UserId] = make(map[int64]*websocket.Conn)
+	}
+	Clients[TokenStatus.UserId][deviceLoginInfo.ID] = conn
 	ClientsMu.Unlock()
 	log.Printf("客户端已连接: %s", conn.RemoteAddr())
 	w.MessageHandle(conn, deviceLoginInfo)
