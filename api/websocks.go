@@ -20,7 +20,7 @@ import (
 type Websocks struct {
 }
 
-var DeviceList map[int64]models.Device
+var DeviceList = make(map[int64]models.Device)
 
 type Message struct {
 	Type      string `form:"type" json:"type" uri:"type" xml:"type"`
@@ -76,6 +76,7 @@ func (w *Websocks) Init(ctx *gin.Context) {
 	deviceService := services.InitDeviceService()
 	deviceLoginInfo := deviceService.Login(tokenStr)
 	DeviceList[deviceLoginInfo.ID] = deviceLoginInfo
+
 	// 将保存连接状态
 	ClientsMu.Lock()
 	Clients[TokenStatus.UserId] = map[int64]*websocket.Conn{deviceLoginInfo.ID: conn}
@@ -106,6 +107,9 @@ func (*Websocks) MessageHandle(conn *websocket.Conn, deviceLoginInfo models.Devi
 			if data.Recipient != 0 {
 				RecipientDevice = DeviceList[data.Recipient]
 			}
+			log.Println("推送用户", RecipientDevice.UserId)
+			log.Println("推送设备", RecipientDevice.ID)
+
 			switch data.Type {
 			case "message":
 				if data.Recipient != 0 {
